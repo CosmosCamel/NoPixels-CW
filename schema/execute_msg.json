@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ExecuteMsg",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "draw"
+      ],
+      "properties": {
+        "draw": {
+          "type": "object",
+          "required": [
+            "chunk_x",
+            "chunk_y",
+            "color",
+            "x",
+            "y"
+          ],
+          "properties": {
+            "chunk_x": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "chunk_y": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "color": {
+              "type": "integer",
+              "format": "uint8",
+              "minimum": 0.0
+            },
+            "x": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "y": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "update_admin"
+      ],
+      "properties": {
+        "update_admin": {
+          "type": "object",
+          "required": [
+            "new_admin_address"
+          ],
+          "properties": {
+            "new_admin_address": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "update_cooldown"
+      ],
+      "properties": {
+        "update_cooldown": {
+          "type": "object",
+          "required": [
+            "new_cooldown"
+          ],
+          "properties": {
+            "new_cooldown": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "update_dimensions"
+      ],
+      "properties": {
+        "update_dimensions": {
+          "type": "object",
+          "required": [
+            "new_width",
+            "new_height"
+          ],
+          "properties": {
+            "new_width": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            },
+            "new_height": {
+              "type": "integer",
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "update_end_height"
+      ],
+      "properties": {
+        "update_end_height": {
+          "type": "object",
+          "properties": {
+            "new_end_height": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "update_start_height"
+      ],
+      "properties": {
+        "update_start_height": {
+          "type": "object",
+          "properties": {
+            "new_start_height": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint64",
+              "minimum": 0.0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}
