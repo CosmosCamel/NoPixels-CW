@@ -110,3 +110,5 @@ Workspace contains:
 
 Follow [Gitpod Getting Started](https://www.gitpod.io/docs/getting-started) and launch your workspace.
 
+## Credits
+Forked from Callum's [juno-pixel](https://github.com/Callum-A/juno-pixel)

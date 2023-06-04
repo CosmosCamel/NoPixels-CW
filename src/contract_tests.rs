@@ -167,15 +167,13 @@ mod tests {
         assert_eq!(
             grid.grid[0][0],
             PixelInfo {
-                color: 3, // Black
-                painter: Some(Addr::unchecked(ADDR1.to_string()))
+                color: 3
             }
         );
         assert_eq!(
             grid.grid[0][1],
             PixelInfo {
-                color: 5, // Red
-                painter: Some(Addr::unchecked(ADDR2.to_string()))
+                color: 5
             }
         );
 
@@ -208,8 +206,7 @@ mod tests {
         assert_eq!(
             grid.grid[0][0],
             PixelInfo {
-                color: 5, // Red
-                painter: Some(Addr::unchecked(ADDR2.to_string()))
+                color: 5
             }
         );
 
@@ -229,8 +226,7 @@ mod tests {
         assert_eq!(
             grid.grid[0][0],
             PixelInfo {
-                color: 5, // Red
-                painter: Some(Addr::unchecked(ADDR2.to_string()))
+                color: 5
             }
         );
     }

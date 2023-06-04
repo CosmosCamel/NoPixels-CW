@@ -136,8 +136,7 @@ pub fn execute_draw(
     let default = vec![
         vec![
             PixelInfo {
-                color: 0, // White
-                painter: None
+                color: 0
             };
             CHUNK_SIZE as usize
         ];
@@ -147,8 +146,7 @@ pub fn execute_draw(
         .may_load(deps.storage, (chunk_x, chunk_y))?
         .unwrap_or(default);
     chunk[y as usize][x as usize] = PixelInfo {
-        color,
-        painter: Some(info.sender.clone()),
+        color
     };
 
     CHUNKS.save(deps.storage, (chunk_x, chunk_y), &chunk)?;
@@ -277,8 +275,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
                 vec![
                     vec![
                         PixelInfo {
-                            color: 0, // White
-                            painter: None
+                            color: 0
                         };
                         CHUNK_SIZE as usize
                     ];
