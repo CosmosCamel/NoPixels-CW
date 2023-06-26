@@ -29,4 +29,7 @@ pub enum ContractError {
 
     #[error("The start height of this grid has not been reached yet, drawing is disabled")]
     StartHeightNotReached {},
+
+    #[error{"This address does not own any tokens from the collection address"}]
+    InvalidCollectionStatus {},
 }
