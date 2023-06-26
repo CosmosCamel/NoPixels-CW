@@ -8,6 +8,7 @@ pub struct InstantiateMsg {
     pub cooldown: u64,
     pub end_height: Option<u64>,
     pub start_height: Option<u64>,
+    pub collection_address: Option<String>,
     /// How many chunks wide
     pub width: u64,
     /// How many chunks high
@@ -39,6 +40,9 @@ pub enum ExecuteMsg {
     },
     UpdateStartHeight {
         new_start_height: Option<u64>,
+    },
+    UpdateCollection {
+        new_collection_address: Option<String>,
     },
 }
 
