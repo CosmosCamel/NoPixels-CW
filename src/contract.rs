@@ -1,8 +1,9 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, QuerierWrapper, QueryRequest, WasmQuery, StdResult};
 use cw2::set_contract_version;
-
+use cw721::TokensResponse;
+use sg721_base::QueryMsg as SgQueryMsg;
 use crate::error::ContractError;
 use crate::msg::{ChunkResponse, CooldownResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, Dimensions, PixelInfo, CHUNKS, CONFIG, COOLDOWNS, DIMENSIONS};
@@ -18,6 +19,24 @@ fn validate_color(color_code: u8) -> Result<(), ContractError> {
     }
 
     Ok(())
+}
+
+fn verify_collection_token(
+    querier: QuerierWrapper,
+    sender: String,
+    collection_address: String,
+) -> Result<bool, ContractError> {
+    let query_msg: SgQueryMsg = SgQueryMsg::Tokens {
+        owner: sender,
+        limit: None,
+        start_after: None
+    };
+    let query_resp: TokensResponse = querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
+        contract_addr: collection_address,
+        msg: to_binary(&query_msg)?,
+    }))?;
+    let does_sender_own = query_resp.tokens.len() > 0;
+    return Ok(does_sender_own);
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
@@ -45,7 +64,8 @@ pub fn instantiate(
         admin_address,
         cooldown: msg.cooldown,
         end_height: msg.end_height,
-        start_height: msg.start_height
+        start_height: msg.start_height,
+        collection_address: msg.collection_address
     };
     let dimensions = Dimensions {
         width: msg.width,
@@ -87,6 +107,9 @@ pub fn execute(
         }
         ExecuteMsg::UpdateStartHeight { new_start_height } => {
             execute_update_start_height(deps, env, info, new_start_height)
+        }
+        ExecuteMsg::UpdateCollection { new_collection_address } => {
+            execute_update_collection(deps, env, info, new_collection_address)
         }
     }
 }
@@ -130,6 +153,12 @@ pub fn execute_draw(
     } else if let Some(end_height) = config.end_height {
         if env.block.height > end_height {
             return Err(ContractError::EndHeightReached {});
+        }
+    }
+    if let Some(collection_address) = config.collection_address {
+        let does_sender_own = verify_collection_token(deps.querier,info.sender.to_string(),collection_address)?;
+        if !does_sender_own {
+            return Err(ContractError::InvalidCollectionStatus {});
         }
     }
 
@@ -239,6 +268,22 @@ pub fn execute_update_end_height(
     CONFIG.save(deps.storage, &config)?;
 
     Ok(Response::new().add_attribute("action", "update_end_height"))
+}
+
+pub fn execute_update_collection(
+    deps: DepsMut,
+    _env: Env,
+    info: MessageInfo,
+    new_collection_address: Option<String>,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    if info.sender != config.admin_address {
+        return Err(ContractError::Unauthorized {});
+    }
+    config.collection_address = new_collection_address;
+    CONFIG.save(deps.storage, &config)?;
+
+    Ok(Response::new().add_attribute("action", "update_collection"))
 }
 
 pub fn execute_update_start_height(
