@@ -15,6 +15,7 @@ pub struct Config {
     /// Optional so if not set it goes on forever.
     pub end_height: Option<u64>,
     pub start_height: Option<u64>,
+    pub collection_address: Option<String>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
