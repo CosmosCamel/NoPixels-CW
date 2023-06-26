@@ -71,6 +71,29 @@
     {
       "type": "object",
       "required": [
+        "update_collection"
+      ],
+      "properties": {
+        "update_collection": {
+          "type": "object",
+          "required": [
+            "new_collection_address"
+          ],
+          "properties": {
+            "new_collection_address": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
         "update_cooldown"
       ],
       "properties": {
