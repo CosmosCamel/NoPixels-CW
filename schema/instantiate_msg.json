@@ -33,6 +33,12 @@
       "format": "uint64",
       "minimum": 0.0
     },
+    "collection_address": {
+      "type": [
+        "string",
+        "null"
+      ],
+    },
     "height": {
       "description": "How many chunks high",
       "type": "integer",
