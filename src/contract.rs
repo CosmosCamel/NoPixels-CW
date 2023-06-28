@@ -14,7 +14,7 @@ const CONTRACT_VERSION: &str = env!("CARGO_PKG_VERSION");
 const CHUNK_SIZE: u64 = 32;
 
 fn validate_color(color_code: u8) -> Result<(), ContractError> {
-    if color_code > 15 {
+    if color_code > 21 {
         return Err(ContractError::InvalidColor {});
     }
 
