@@ -1,10 +1,14 @@
-use cosmwasm_std::StdError;
+use cosmwasm_std::{Coin, StdError};
+use cw_utils::{self, PaymentError};
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, PartialEq)]
 pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
+
+    #[error("{0}")]
+    PaymentError(#[from] PaymentError),
 
     #[error("Unauthorized")]
     Unauthorized {},
@@ -23,7 +27,7 @@ pub enum ContractError {
 
     #[error("This address is still on cooldown, please wait until you can draw again")]
     StillOnCooldown {},
-    
+
     #[error("The end height of this grid has been reached, drawing is no longer allowed")]
     EndHeightReached {},
 
@@ -32,4 +36,7 @@ pub enum ContractError {
 
     #[error{"This address does not own any tokens from the collection address"}]
     InvalidCollectionStatus {},
+
+    #[error("WrongFee: expected: {expected}")]
+    WrongFee { expected: Coin },
 }

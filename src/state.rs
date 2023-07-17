@@ -2,8 +2,8 @@ use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+use cosmwasm_std::Coin;
 use cw_storage_plus::{Item, Map};
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Config {
     /// Admin address, can update config values.
@@ -15,7 +15,8 @@ pub struct Config {
     /// Optional so if not set it goes on forever.
     pub end_height: Option<u64>,
     pub start_height: Option<u64>,
-    pub collection_address: Option<String>
+    pub collection_address: Option<String>,
+    pub fee: Coin,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -29,7 +30,7 @@ pub struct Dimensions {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct PixelInfo {
-    pub color: u8
+    pub color: u8,
 }
 
 pub const CONFIG: Item<Config> = Item::new("config");
