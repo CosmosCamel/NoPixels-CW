@@ -1,12 +1,19 @@
-#[cfg(not(feature = "library"))]
-use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, QuerierWrapper, QueryRequest, WasmQuery, StdResult};
-use cw2::set_contract_version;
-use cw721::TokensResponse;
-use sg721_base::QueryMsg as SgQueryMsg;
+use std::vec;
+
 use crate::error::ContractError;
 use crate::msg::{ChunkResponse, CooldownResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, Dimensions, PixelInfo, CHUNKS, CONFIG, COOLDOWNS, DIMENSIONS};
+#[cfg(not(feature = "library"))]
+use cosmwasm_std::entry_point;
+use cosmwasm_std::{
+    ensure, has_coins, to_binary, BankMsg, Binary, Deps, DepsMut, Env, MessageInfo, QuerierWrapper,
+    QueryRequest, Response, StdResult, SubMsg, WasmQuery,
+};
+use cw_utils::nonpayable;
+
+use cw2::set_contract_version;
+use cw721::TokensResponse;
+use sg721_base::QueryMsg as SgQueryMsg;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:nopixels";
@@ -29,7 +36,7 @@ fn verify_collection_token(
     let query_msg: SgQueryMsg = SgQueryMsg::Tokens {
         owner: sender,
         limit: None,
-        start_after: None
+        start_after: None,
     };
     let query_resp: TokensResponse = querier.query(&QueryRequest::Wasm(WasmQuery::Smart {
         contract_addr: collection_address,
@@ -65,7 +72,8 @@ pub fn instantiate(
         cooldown: msg.cooldown,
         end_height: msg.end_height,
         start_height: msg.start_height,
-        collection_address: msg.collection_address
+        collection_address: msg.collection_address,
+        fee: msg.fee,
     };
     let dimensions = Dimensions {
         width: msg.width,
@@ -96,9 +104,10 @@ pub fn execute(
         ExecuteMsg::UpdateAdmin { new_admin_address } => {
             execute_update_admin(deps, env, info, new_admin_address)
         }
-        ExecuteMsg::UpdateDimensions { new_width, new_height } => {
-            execute_update_dimensions(deps, env, info, new_width, new_height)
-        }
+        ExecuteMsg::UpdateDimensions {
+            new_width,
+            new_height,
+        } => execute_update_dimensions(deps, env, info, new_width, new_height),
         ExecuteMsg::UpdateCooldown { new_cooldown } => {
             execute_update_cooldown(deps, env, info, new_cooldown)
         }
@@ -108,9 +117,9 @@ pub fn execute(
         ExecuteMsg::UpdateStartHeight { new_start_height } => {
             execute_update_start_height(deps, env, info, new_start_height)
         }
-        ExecuteMsg::UpdateCollection { new_collection_address } => {
-            execute_update_collection(deps, env, info, new_collection_address)
-        }
+        ExecuteMsg::UpdateCollection {
+            new_collection_address,
+        } => execute_update_collection(deps, env, info, new_collection_address),
     }
 }
 
@@ -126,6 +135,24 @@ pub fn execute_draw(
     color: u8,
 ) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
+    let mut response = Response::new();
+    // handle draw fee
+    if config.fee.amount.is_zero() {
+        nonpayable(&info)?;
+    } else {
+        // check it has the right fee
+        ensure!(
+            has_coins(&info.funds, &config.fee),
+            ContractError::WrongFee {
+                expected: config.fee
+            }
+        );
+        // burn fee
+        response.messages.push(SubMsg::new(BankMsg::Burn {
+            amount: vec![config.fee.clone()],
+        }));
+    }
+
     let dimensions = DIMENSIONS.load(deps.storage)?;
     let user_cooldown = COOLDOWNS
         .may_load(deps.storage, &info.sender)?
@@ -156,27 +183,18 @@ pub fn execute_draw(
         }
     }
     if let Some(collection_address) = config.collection_address {
-        let does_sender_own = verify_collection_token(deps.querier,info.sender.to_string(),collection_address)?;
+        let does_sender_own =
+            verify_collection_token(deps.querier, info.sender.to_string(), collection_address)?;
         if !does_sender_own {
             return Err(ContractError::InvalidCollectionStatus {});
         }
     }
 
-    let default = vec![
-        vec![
-            PixelInfo {
-                color: 0
-            };
-            CHUNK_SIZE as usize
-        ];
-        CHUNK_SIZE as usize
-    ];
+    let default = vec![vec![PixelInfo { color: 0 }; CHUNK_SIZE as usize]; CHUNK_SIZE as usize];
     let mut chunk = CHUNKS
         .may_load(deps.storage, (chunk_x, chunk_y))?
         .unwrap_or(default);
-    chunk[y as usize][x as usize] = PixelInfo {
-        color
-    };
+    chunk[y as usize][x as usize] = PixelInfo { color };
 
     CHUNKS.save(deps.storage, (chunk_x, chunk_y), &chunk)?;
     COOLDOWNS.save(
@@ -185,7 +203,7 @@ pub fn execute_draw(
         &(env.block.height + config.cooldown),
     )?;
 
-    Ok(Response::new().add_attribute("action", "draw"))
+    Ok(response.add_attribute("action", "draw"))
 }
 
 pub fn execute_update_admin(
@@ -317,15 +335,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetCooldown { address } => query_cooldown(deps, address),
         QueryMsg::GetChunk { x, y } => to_binary(&ChunkResponse {
             grid: CHUNKS.may_load(deps.storage, (x, y))?.unwrap_or_else(|| {
-                vec![
-                    vec![
-                        PixelInfo {
-                            color: 0
-                        };
-                        CHUNK_SIZE as usize
-                    ];
-                    CHUNK_SIZE as usize
-                ]
+                vec![vec![PixelInfo { color: 0 }; CHUNK_SIZE as usize]; CHUNK_SIZE as usize]
             }),
         }),
     }

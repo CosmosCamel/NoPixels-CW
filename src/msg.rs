@@ -1,7 +1,7 @@
 use crate::state::PixelInfo;
+use cosmwasm_std::Coin;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg {
     pub admin_address: String,
@@ -13,6 +13,7 @@ pub struct InstantiateMsg {
     pub width: u64,
     /// How many chunks high
     pub height: u64,
+    pub fee: Coin,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
