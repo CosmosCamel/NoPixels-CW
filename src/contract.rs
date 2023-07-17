@@ -147,9 +147,10 @@ pub fn execute_draw(
                 expected: config.fee
             }
         );
-        // burn fee
-        response.messages.push(SubMsg::new(BankMsg::Burn {
-            amount: vec![config.fee.clone()],
+        // send fee
+        response.messages.push(SubMsg::new(BankMsg::Send {
+           to_address: config.admin_address,
+           amount: vec![config.fee.clone()],
         }));
     }
 
