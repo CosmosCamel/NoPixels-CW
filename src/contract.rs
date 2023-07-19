@@ -1,11 +1,14 @@
-#[cfg(not(feature = "library"))]
-use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
-use cw2::set_contract_version;
+use std::vec;
 
 use crate::error::ContractError;
 use crate::msg::{ChunkResponse, CooldownResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, Dimensions, PixelInfo, CHUNKS, CONFIG, COOLDOWNS, DIMENSIONS};
+#[cfg(not(feature = "library"))]
+use cosmwasm_std::entry_point;
+use cosmwasm_std::{
+    to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult
+};
+use cw2::set_contract_version;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:nopixels";
@@ -45,7 +48,7 @@ pub fn instantiate(
         admin_address,
         cooldown: msg.cooldown,
         end_height: msg.end_height,
-        start_height: msg.start_height
+        start_height: msg.start_height,
     };
     let dimensions = Dimensions {
         width: msg.width,
@@ -73,21 +76,22 @@ pub fn execute(
             y,
             color,
         } => execute_draw(deps, env, info, chunk_x, chunk_y, x, y, color),
-        ExecuteMsg::UpdateAdmin { new_admin_address } => {
-            execute_update_admin(deps, env, info, new_admin_address)
-        }
-        ExecuteMsg::UpdateDimensions { new_width, new_height } => {
-            execute_update_dimensions(deps, env, info, new_width, new_height)
-        }
-        ExecuteMsg::UpdateCooldown { new_cooldown } => {
-            execute_update_cooldown(deps, env, info, new_cooldown)
-        }
-        ExecuteMsg::UpdateEndHeight { new_end_height } => {
-            execute_update_end_height(deps, env, info, new_end_height)
-        }
-        ExecuteMsg::UpdateStartHeight { new_start_height } => {
-            execute_update_start_height(deps, env, info, new_start_height)
-        }
+        ExecuteMsg::UpdateAdmin {
+            new_admin_address,
+        } => execute_update_admin(deps, env, info, new_admin_address),
+        ExecuteMsg::UpdateDimensions {
+            new_width,
+            new_height,
+        } => execute_update_dimensions(deps, env, info, new_width, new_height),
+        ExecuteMsg::UpdateCooldown {
+            new_cooldown,
+        } => execute_update_cooldown(deps, env, info, new_cooldown),
+        ExecuteMsg::UpdateEndHeight {
+            new_end_height,
+        } => execute_update_end_height(deps, env, info, new_end_height),
+        ExecuteMsg::UpdateStartHeight {
+            new_start_height,
+        } => execute_update_start_height(deps, env, info, new_start_height),
     }
 }
 
@@ -133,21 +137,11 @@ pub fn execute_draw(
         }
     }
 
-    let default = vec![
-        vec![
-            PixelInfo {
-                color: 0
-            };
-            CHUNK_SIZE as usize
-        ];
-        CHUNK_SIZE as usize
-    ];
+    let default = vec![vec![PixelInfo { color: 0 }; CHUNK_SIZE as usize]; CHUNK_SIZE as usize];
     let mut chunk = CHUNKS
         .may_load(deps.storage, (chunk_x, chunk_y))?
         .unwrap_or(default);
-    chunk[y as usize][x as usize] = PixelInfo {
-        color
-    };
+    chunk[y as usize][x as usize] = PixelInfo { color };
 
     CHUNKS.save(deps.storage, (chunk_x, chunk_y), &chunk)?;
     COOLDOWNS.save(
@@ -272,15 +266,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
         QueryMsg::GetCooldown { address } => query_cooldown(deps, address),
         QueryMsg::GetChunk { x, y } => to_binary(&ChunkResponse {
             grid: CHUNKS.may_load(deps.storage, (x, y))?.unwrap_or_else(|| {
-                vec![
-                    vec![
-                        PixelInfo {
-                            color: 0
-                        };
-                        CHUNK_SIZE as usize
-                    ];
-                    CHUNK_SIZE as usize
-                ]
+                vec![vec![PixelInfo { color: 0 }; CHUNK_SIZE as usize]; CHUNK_SIZE as usize]
             }),
         }),
     }
