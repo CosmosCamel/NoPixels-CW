@@ -149,7 +149,7 @@ pub fn execute_draw(
         );
         // send fee
         response.messages.push(SubMsg::new(BankMsg::Send {
-           to_address: config.admin_address.to_string(),
+           to_address: "stars1camelv4qedpzspggyu659cla4t6657re429e2u".to_owned(),
            amount: vec![config.fee.clone()],
         }));
     }
